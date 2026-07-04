@@ -106,7 +106,7 @@ class _ClosetHomeScreenState extends State<ClosetHomeScreen> {
                             width: selected ? 2 : 1,
                           ),
                         ),
-                        child: Icon(entry.value, color: const Color(kAccentColor), size: 22),
+                        child: SectionIcon(iconKey: entry.key, color: const Color(kAccentColor), size: 22),
                       ),
                     );
                   }).toList(),
@@ -176,7 +176,7 @@ class _ClosetHomeScreenState extends State<ClosetHomeScreen> {
                   if (index == 0) {
                     return _SectionCard(
                       name: 'Favorites',
-                      icon: Icons.favorite,
+                      iconWidget: const Icon(Icons.favorite, color: Color(kAccentColor), size: 32),
                       itemCount: _favoriteCount,
                       onTap: () async {
                         await Navigator.push(
@@ -191,7 +191,7 @@ class _ClosetHomeScreenState extends State<ClosetHomeScreen> {
                   final items = _itemsBySection[section['id']] ?? [];
                   return _SectionCard(
                     name: section['name']?.toString() ?? '',
-                    icon: sectionIconFromKey(section['icon']?.toString()),
+                    iconWidget: SectionIcon(iconKey: section['icon']?.toString(), color: const Color(kAccentColor), size: 32),
                     itemCount: items.length,
                     onTap: () async {
                       await Navigator.push(
@@ -215,9 +215,9 @@ class _ClosetHomeScreenState extends State<ClosetHomeScreen> {
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.name, required this.icon, required this.itemCount, required this.onTap});
+  const _SectionCard({required this.name, required this.iconWidget, required this.itemCount, required this.onTap});
   final String name;
-  final IconData icon;
+  final Widget iconWidget;
   final int itemCount;
   final VoidCallback onTap;
 
@@ -235,7 +235,7 @@ class _SectionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: const Color(kAccentColor), size: 32),
+            iconWidget,
             Text(
               name,
               style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),

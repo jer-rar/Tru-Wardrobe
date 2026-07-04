@@ -70,7 +70,7 @@ class _SectionDetailScreenState extends State<SectionDetailScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(sectionIconFromKey(widget.section['icon']?.toString()), size: 20),
+            SectionIcon(iconKey: widget.section['icon']?.toString(), size: 20),
             const SizedBox(width: 8),
             Flexible(
               child: Text(

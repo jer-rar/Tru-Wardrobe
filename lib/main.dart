@@ -22,7 +22,7 @@ void main() async {
 
   await Supabase.initialize(
     url: kSupabaseUrl,
-    anonKey: kSupabaseAnonKey,
+    publishableKey: kSupabasePublishableKey,
     authOptions: const FlutterAuthClientOptions(
       authFlowType: AuthFlowType.pkce,
     ),

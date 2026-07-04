@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.skipAutoLogin = false});
+  final bool skipAutoLogin;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -14,9 +16,47 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordCtrl = TextEditingController();
   bool _isLogin = true;
   bool _loading = false;
+  bool _autoLogging = false;
   bool _obscurePassword = true;
   String? _error;
   bool _signUpPending = false;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.skipAutoLogin) _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final remember = prefs.getBool('remember_me') ?? false;
+    if (!remember) return;
+    final email = prefs.getString('saved_email') ?? '';
+    final password = prefs.getString('saved_password') ?? '';
+    if (email.isEmpty || password.isEmpty) return;
+    if (!mounted) return;
+    setState(() {
+      _rememberMe = true;
+      _emailCtrl.text = email;
+      _passwordCtrl.text = password;
+    });
+    _submit(autoLogin: true);
+  }
+
+  Future<void> _saveCredentials(String email, String password) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('remember_me', true);
+    await prefs.setString('saved_email', email);
+    await prefs.setString('saved_password', password);
+  }
+
+  Future<void> _clearSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('remember_me');
+    await prefs.remove('saved_email');
+    await prefs.remove('saved_password');
+  }
 
   @override
   void dispose() {
@@ -25,21 +65,30 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit({bool autoLogin = false}) async {
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text.trim();
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _error = 'Please enter your email and password.');
+      if (!autoLogin) setState(() => _error = 'Please enter your email and password.');
       return;
     }
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (autoLogin) {
+      if (mounted) setState(() => _autoLogging = true);
+    } else {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       if (_isLogin) {
         await Supabase.instance.client.auth
             .signInWithPassword(email: email, password: password);
+        if (_rememberMe) {
+          await _saveCredentials(email, password);
+        } else {
+          await _clearSavedCredentials();
+        }
       } else {
         final res =
             await Supabase.instance.client.auth.signUp(email: email, password: password);
@@ -47,6 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() {
             _signUpPending = true;
             _loading = false;
+            _autoLogging = false;
           });
           return;
         }
@@ -56,11 +106,22 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) setState(() => _error = 'Something went wrong. Please try again.');
     }
-    if (mounted) setState(() => _loading = false);
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        _autoLogging = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_autoLogging) {
+      return const Scaffold(
+        backgroundColor: Color(kBgColor),
+        body: Center(child: CircularProgressIndicator(color: Color(kAccentColor))),
+      );
+    }
     return Scaffold(
       backgroundColor: const Color(kBgColor),
       body: SafeArea(
@@ -127,6 +188,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+                  if (_isLogin) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            activeColor: const Color(kAccentColor),
+                            onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Remember me', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                      ],
+                    ),
+                  ],
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
@@ -135,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _loading ? null : _submit,
+                      onPressed: _loading ? null : () => _submit(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(kAccentColor),
                         padding: const EdgeInsets.symmetric(vertical: 16),

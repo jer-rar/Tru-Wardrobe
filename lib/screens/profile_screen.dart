@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_constants.dart';
 import '../constants/legal_text.dart';
@@ -29,6 +30,10 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
     if (confirm == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('remember_me');
+      await prefs.remove('saved_email');
+      await prefs.remove('saved_password');
       await Supabase.instance.client.auth.signOut();
     }
   }

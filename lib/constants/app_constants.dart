@@ -1,9 +1,10 @@
-const String kAppVersion = '1.0.0';
-const int kAppVersionCode = 1;
+const String kAppVersion = '1.0.1';
+const int kAppVersionCode = 2;
 
 const String kSupabaseUrl = 'https://yxqrbjpvckvzgspgczok.supabase.co';
-const String kSupabaseAnonKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cXJianB2Y2t2emdzcGdjem9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNzg1MDMsImV4cCI6MjA5ODY1NDUwM30.naoiGkMic0d6Kq67vfrGLEx9HDd8monJU6X7M4DGTH4';
+// New-style publishable key — not a JWT, safe to keep even after legacy
+// JWT-based API keys (anon/service_role) are disabled on the project.
+const String kSupabasePublishableKey = 'sb_publishable_scIFDiHtAmAX03A5ITfW8A_vPf-mO9J';
 
 const String kWardrobeImagesBucket = 'tw-wardrobe-images';
 
